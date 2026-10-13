@@ -10,33 +10,46 @@ app.get('/', (req, res)=>{
     res.send('La API está funcionando');
 });
 
-app.get('/api/v1/books', async (req, res)=>{
+app.get('/api/v1/books', async (req, res) => {
+    const { writer, year } = req.query;
+    const conditions = [];
+    const values = [];
+
+    if (writer) {
+        values.push(`%${writer}%`);
+        conditions.push(`writer LIKE $${values.length}`);
+    }
+    if (year) {
+        values.push(Number(year));
+        conditions.push(`year = $${values.length}`);
+    }
+
+    const query = 'SELECT * FROM book'
+        + (conditions.length>0 ? ` WHERE ${conditions.join(' AND ')}` : '');
+
+    try {
+        const { rows } = await pool.query(query, values);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Error al consultar la base de datos' });
+    }
+});
+
+
+app.get('/api/v1/books/:id', async (req, res)=>{
+    
     let rows;
-    try{
-        ({rows} = await pool.query(`SELECT * FROM book`));
-    }catch(err){
+    try {
+        ({rows} = await pool.query(`SELECT * FROM book WHERE id = $1`, [req.params.id]));
+    } catch(err){
         console.error(err);
     }
-    if (!rows)  rows = {"msg": "la consulta no devolvió ningún registro"}
+     if(rows.length == 0) rows = {"msg": "No se encontró ningún registro"};
     res.json(rows);
+   
 });
 
-/* TO-DO: DEBERES: endpoint debe apuntar a BD*/
-app.get('/api/v1/books/:id', (req, res)=>{
-    let book = books.find(b => b.id == req.params.id);
-    if (!book) {
-        res.status(404).json({error: 'No se econtró ningún libro con ese id'});
-    }
-    res.json(book);
-});
-
-app.get('/api/v1/books/writer/:writer', (req, res)=>{
-    let book = books.find(b=> b.writer == req.params.writer);
-     if (!book) {
-        res.status(404).json({error: 'No se econtró ningún libro con ese escritor'});
-    }
-    res.json(book);
-});
 
 app.listen(PORT, ()=>{
     console.log(`El servidor está escuchando en el puerto ${PORT}`);
