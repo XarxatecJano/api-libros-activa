@@ -1,7 +1,6 @@
 import { Router } from "express";
-import {pool} from '../model/db.js';
-import { findBooks } from "../controllers/books/findBooks.js";
-import { findBookById } from "../controllers/books/findBookbyId.js";
+import {pool} from '../config/db.js';
+import { findBooks, findBookById } from "../controllers/bookController.js";
 
 
 const router = new Router();

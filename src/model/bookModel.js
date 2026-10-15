@@ -1,4 +1,4 @@
-import { pool } from "../db.js";
+import { pool } from "../config/db.js";
 
 export async function findAll(params){
     const conditions = [];
@@ -20,4 +20,12 @@ export async function findAll(params){
 
    
     return result;
+}
+
+export async function findOneById(id){
+    
+    const result = await pool.query(`SELECT * FROM book WHERE id = $1`, [id]);
+
+    return result;
+
 }
